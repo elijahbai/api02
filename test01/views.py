@@ -1,14 +1,18 @@
 from django.shortcuts import render
 import json
-from django.http import HttpResponse,JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from test01.models import User,Article,Person
+from test01.models import User, Article, Person
 from django.core import serializers
 from django.views.decorators.http import require_http_methods
+from rest_framework.views import APIView
+#from api.ut
 from django.shortcuts import render
+
+
 # Create your views here.
 
-
+# ok
 @csrf_exempt
 def my_api(request):
     dic = {}
@@ -20,79 +24,14 @@ def my_api(request):
         return HttpResponse(json.dumps(dic, ensure_ascii=False))
 
 
-#新增文章
-
-def add_article(request):
-    if request.method == "POST":
-        print(request)
-        print("test")
-        req =json.loads(request.body)
-        #req = json.loads(request.body)
-        #print(req)
-        key_flag = req.get("title") and req.get("content") and len(req)==2
-        #判断请求体是否正确
-        if key_flag:
-            title = req["title"]
-            content = req["content"]
-            #title返回的是一个list
-            title_exist = Article.objects.filter(title=title)
-            #判断是否存在同名title
-            if len(title_exist) != 0:
-                return JsonResponse({"status":"BS.400","msg":"title aleady exist,fail to publish."})
-            '''插入数据'''
-            add_art = Article(title=title,content=content,status="alive")
-            add_art.save()
-            return JsonResponse({"status":"BS.200","msg":"publish article sucess."})
-        else:
-            return  JsonResponse({"status":"BS.400","message":"please check param."})
-    else:
-        return  JsonResponse({"status":"BS.400","message":"please check param."})
-
-#修改文章
-
-def modify_article(request,art_id):
-    if request.method == "POST":
-        req = json.loads(request.body.decode())
-        try:
-            art = Article.objects.get(id=art_id)
-            key_flag = req.get("title") and req.get("content") and len(req)==2
-            if key_flag:
-                title = req["title"]
-                content = req["content"]
-                title_exist = Article.objects.filter(title=title)
-                if len(title_exist) > 1:
-                    return JsonResponse({"status":"BS.400","msg":"title aleady exist."})
-                '''更新数据'''
-                old_art = Article.objects.get(id=art_id)
-                old_art.title = title
-                old_art.content = content
-                old_art.save()
-                return JsonResponse({"status":"BS.200","msg":"modify article sucess."})
-        except Article.DoesNotExist:
-            return  JsonResponse({"status":"BS.300","msg":"article is not exists,fail to modify."})
-        # 删除文章
-    else:
-        return JsonResponse({"status": "BS.300", "msg": "article is not exists,fail to modify."})
-
-
-        # if request.method == "DELETE":
-        #     try:
-        #         # art = Article.objects.get(id=art_id)
-        #         # art_id = art.id
-        #         # art.delete()
-        #         print("test")
-        #         return JsonResponse({"status": "BS.200", "msg": "delete article sucess."})
-        #     except Article.DoesNotExist:
-        #         return JsonResponse({"status": "BS.300", "msg": "article is not exists,fail to delete."})
-
-
+# ok
 @require_http_methods(["GET"])
 def add_person(request):
     response = {}
     try:
         person = Person(
-        	person_name=request.GET.get('person_name'),
-        	deposit=request.GET.get('deposit')
+            person_name=request.GET.get('person_name'),
+            deposit=request.GET.get('deposit')
         )
         person.save()
         response['msg'] = 'success'
@@ -103,6 +42,7 @@ def add_person(request):
     return JsonResponse(response)
 
 
+# ok
 @require_http_methods(["GET"])
 def show_persons(request):
     response = {}
@@ -115,3 +55,73 @@ def show_persons(request):
         response['msg'] = str(e)
         response['error_num'] = 1
     return JsonResponse(response)
+
+
+# post测试
+# 定义功能
+def add_args(a, b):
+    return a + b
+
+
+# 接口函数
+def post(request):
+    if request.method == 'POST':  # 当提交表单时
+        dic = {}
+        # 判断是否传参
+        if request.POST:
+            a = request.POST.get('a', 0)
+            b = request.POST.get('b', 0)
+            # 判断参数中是否含有a和b
+            if a and b:
+                res = add_args(a, b)
+                dic['number'] = res
+                dic = json.dumps(dic)
+                return HttpResponse(dic)
+            else:
+                return HttpResponse('输入错误')
+        else:
+            return HttpResponse('输入为空')
+
+    else:
+        return HttpResponse('方法错误')
+
+
+class UserView(APIView):
+    def get(self, request, *args, **kwargs):
+        pk = kwargs.get('pk')
+        if not pk:
+            result = User.objects.all().exclude(is_superuser=True)
+            pg = MyPageNumberPagination()
+            page_queryset = pg.paginate_queryset(queryset=result, request=request, view=self)
+            pg.set_index(request,page_queryset)
+            ser = UserSerializer(instance=page_queryset, many=True)
+            return MyResponse.response(data=ser.data,count=pg.page.paginator.count)
+        else:
+            result = User.objects.get(id=pk)
+            ser = UserSerializer(instance=result, many=False)
+        return MyResponse.response(data=ser.data)
+
+    def post(self, request, *args, **kwargs):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        try:
+            User.objects.create_user(password=password, username=username)
+        except Exception as e:
+            return MyResponse.response_error(code=601,msg='用户名不能重复')
+        return MyResponse.response()
+    def delete(self, request, version,pk):
+        User.objects.filter(id=pk).delete()
+        return MyResponse.response()
+
+    def put(self, request,  version,pk):
+        try:
+            user = User.objects.get(id=pk)
+            # username = request.data.get('username')
+            password = request.data.get('password')
+            if not password:
+                return MyResponse.response_error(msg='密码不能为空')
+            user.set_password(password)
+            user.save()
+        except Exception as e:
+            return MyResponse.response_error(data=e.args[0])
+        return MyResponse.response()
