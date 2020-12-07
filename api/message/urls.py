@@ -21,8 +21,8 @@ urlpatterns = [
     # path('admin/', admin.site.urls),
 
 
-    path('user/',UserView.as_view()),
-    re_path('user/(?P<pk>\d+)/$',UserView.as_view()),
+    path('message/',MessageView.as_view()),
+    re_path('message/(?P<pk>\d+)/$',MessageView.as_view()),
 
 
 

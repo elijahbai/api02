@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'test01',
+    'api.user',
+    'api.message',
 ]
 
 MIDDLEWARE = [
@@ -128,3 +130,14 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+REST_FRAMEWORK = {
+    'DEFAULT_VERSIONING_CLASS':'rest_framework.versioning.URLPathVersioning',
+    # 'ALLOWED_VERSIONS': ['v1','v2'],         # 版本控制
+    # 'DEFAULT_AUTHENTICATION_CLASSES' : ['api.utils.auth.MyAuthentication',],
+    # 'UNAUTHENTICATED_USER': lambda : '匿名用户',
+    'UNAUTHENTICATED_USER': None,
+    'UNAUTHENTICATED_TOKEN': None,
+   # 'DEFAULT_PERMISSION_CLASSES': ['api.utils.permissions.MyPermissions',],
+    # 'EXCEPTION_HANDLER': 'api.utils.auth.exception_handler',
+}

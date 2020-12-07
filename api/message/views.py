@@ -16,49 +16,59 @@ from django.conf import settings
 # Create your views here.
 
 
-class UserView(APIView):
+class MessageView(APIView):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
         if not pk:
-            result = User.objects.all().exclude(is_superuser=True)
+            result = Message.objects.all().exclude()
+            #result = Message.objects.all().exclude(is_superuser=True)
             pg = MyPageNumberPagination()
             page_queryset = pg.paginate_queryset(queryset=result, request=request, view=self)
             pg.set_index(request,page_queryset)
-            ser = UserSerializer(instance=page_queryset, many=True)
+            ser = MessageSerializer(instance=page_queryset, many=True)
             return MyResponse.response(data=ser.data,count=pg.page.paginator.count)
         else:
-            result = User.objects.get(id=pk)
-            ser = UserSerializer(instance=result, many=False)
+            result = Message.objects.get(id=pk)
+            ser = MessageSerializer(instance=result, many=False)
         return MyResponse.response(data=ser.data)
 
     def post(self, request, *args, **kwargs):
         print(request)
-        username = request.data.get('username')
-        password = request.data.get('password')
+        #message = request.data.get('message')
+        #password = request.data.get('password')
         try:
-            User.objects.create_user(password=password, username=username)
+            ser = MessageSerializer(data=request.data)
+            if ser.is_valid():
+                ser.save()
+                return MyResponse.response()
+            return MyResponse.response_error(data=ser.errors)
+            #Message.objects.create_user(message=message)
         except Exception as e:
-            return MyResponse.response_error(code=601,msg='用户名不能重复')
-        return MyResponse.response()
+            return MyResponse.response_error(code=601,msg='没能添加成功')
+
 
     def delete(self,request, *args, **kwargs):
         id = request.data['id']
         #print(self, request, version,pk)
         print(request.data)
-        User.objects.filter(id=id).delete()
+        Message.objects.filter(id=id).delete()
         return MyResponse.response()
 
     def put(self, request,*args, **kwargs):
+        print(request)
         try:
             id = request.data['id']
-            user = User.objects.get(id=id)
+            item = Message.objects.get(id=id)
+           # id = request.data['id']
             # username = request.data.get('username')
-            password = request.data.get('password')
-            if not password:
-                return MyResponse.response_error(msg='密码不能为空')
-            user.set_password(password)
-            user.save()
+            #message = request.data.get('message')
+            ser = MessageSerializer(data=request.data, instance=item)
+            if ser.is_valid():
+                ser.save()
+                return MyResponse.response()
+            return MyResponse.response_error(msg='密码不能为空')
+            #mes.set_password(password)
         except Exception as e:
             return MyResponse.response_error(data=e.args[0])
-        return MyResponse.response()
+
 

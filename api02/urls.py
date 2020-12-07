@@ -13,7 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url,include
+from django.conf.urls import url,include,re_path
 from django.contrib import admin
 from test01 import views
 import test01.urls
@@ -30,4 +30,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     # url(r'^api/', include(myapp.urls)),
     url(r'^', include(test01.urls)),
+    re_path('^api/(?P<version>\w+)/user/',include('api.user.urls')),
+    re_path('^api/(?P<version>\w+)/message/',include('api.message.urls')),
 ]
