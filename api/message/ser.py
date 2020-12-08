@@ -8,7 +8,7 @@ class MessageSerializer(serializers.ModelSerializer):
     # index = serializers.IntegerField(default=1)
     class Meta:
         model = Message
-        fields = ['id','message']
+        fields = ['id','message','user',]
         # fields = "__all__"
         # depth =
 

@@ -15,8 +15,6 @@ Including another URLconf
 """
 from django.conf.urls import url,include,re_path
 from django.contrib import admin
-from test01 import views
-import test01.urls
 from django.urls import path
 
 
@@ -29,7 +27,6 @@ urlpatterns = [
     # url(r'show_persons$', views.show_persons, ),
     path('admin/', admin.site.urls),
     # url(r'^api/', include(myapp.urls)),
-    url(r'^', include(test01.urls)),
     re_path('^api/(?P<version>\w+)/user/',include('api.user.urls')),
     re_path('^api/(?P<version>\w+)/message/',include('api.message.urls')),
 ]

@@ -30,6 +30,7 @@ class MessageView(APIView):
         else:
             result = Message.objects.get(id=pk)
             ser = MessageSerializer(instance=result, many=False)
+            print(ser.data)
         return MyResponse.response(data=ser.data)
 
     def post(self, request, *args, **kwargs):
