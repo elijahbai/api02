@@ -15,6 +15,44 @@ from django.conf import settings
 # @csrf_exempt
 # Create your views here.
 
+class LoginView(APIView):
+    authentication_classes = []
+    def post(self,request,*args,**kwargs):
+        print(request.data)
+        request = request._request
+        print(request)
+        if ('username' in request.POST) and ('password' in request.POST):
+            username = request.POST['username']
+            password = request.POST['password']
+            user = authenticate(username=username, password=password)
+            if user is not None:
+                if user.is_active:
+                    # request.session.set_expiry(0)
+                    try:
+                        token = uuid.uuid1()
+                        UserToken.objects.create(user=user,token=token,expiretime=int(time.time()))
+
+                        permission = list(user.get_all_permissions())
+                        keys = []
+                        for i in range(len(permission)):
+                            keys.append(1)
+
+                        return MyResponse.response(data={'token':token, 'permission':dict(zip(permission, keys)),'user_id':user.id})
+                    except:
+                        return MyResponse.response(code=402)
+                        #return MyResponse.response(code=402, msg='请重新登入')
+            # return Response({'code': 401, 'status': 'fail', 'msg': '账号或密码错误'})
+            return MyResponse.response(code=401, msg='账号或密码错误')
+        else:
+            # return JsonResponse(code=400,msg='please login')
+            return MyResponse.response(code=400, msg='账号或密码错误')
+
+class LogoutView(APIView):
+    authentication_classes = []
+    def get(self,request,*args, **kwargs):
+        token = request.query_params.get('token')
+        UserToken.objects.filter(token=token).delete()
+        return MyResponse.response()
 
 class UserView(APIView):
     def get(self, request, *args, **kwargs):

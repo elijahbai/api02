@@ -20,6 +20,8 @@ from .views import *
 urlpatterns = [
     # path('admin/', admin.site.urls),
 
+    path('login/', LoginView.as_view()),
+    path('logout/', LogoutView.as_view()),
 
     path('user/',UserView.as_view()),
     re_path('user/(?P<pk>\d+)/$',UserView.as_view()),

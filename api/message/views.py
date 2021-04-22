@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.shortcuts import render,HttpResponse
 from rest_framework.views import APIView
 from api.utils.response import MyResponse
+from django.db.models import Q
 from django.contrib.auth import authenticate
 from .models import *
 import time
@@ -19,8 +20,13 @@ from django.conf import settings
 class MessageView(APIView):
     def get(self, request, *args, **kwargs):
         pk = kwargs.get('pk')
+        print(pk)
         if not pk:
-            result = Message.objects.all().exclude()
+            keyword = request.query_params.get('keyword', '')
+            print(keyword)
+            filt = Q(message__icontains=keyword)
+            result = Message.objects.filter(filt)
+            #result = Message.objects.all().exclude()
             #result = Message.objects.all().exclude(is_superuser=True)
             pg = MyPageNumberPagination()
             page_queryset = pg.paginate_queryset(queryset=result, request=request, view=self)
@@ -67,7 +73,7 @@ class MessageView(APIView):
             if ser.is_valid():
                 ser.save()
                 return MyResponse.response()
-            return MyResponse.response_error(msg='密码不能为空')
+            return MyResponse.response_error(msg='something wrong!')
             #mes.set_password(password)
         except Exception as e:
             return MyResponse.response_error(data=e.args[0])
